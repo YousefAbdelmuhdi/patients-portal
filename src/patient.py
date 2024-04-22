@@ -19,8 +19,8 @@ There should be a method to commit that patient to the database using the api_co
 
 import uuid
 from datetime import datetime
-from src.config import GENDERS, WARD_NUMBERS, ROOM_NUMBERS
-from src.patient_db_config import PATIENT_COLUMN_NAMES
+from config import GENDERS, WARD_NUMBERS, ROOM_NUMBERS
+from patient_db_config import PATIENT_COLUMN_NAMES
 
 class Patient:
     def __init__(self, name, gender, age):
@@ -54,9 +54,18 @@ class Patient:
         return ward
 
     def _validate_room(self, room):
-        if room not in ROOM_NUMBERS.get(self.patient_ward, []):
+        all_rooms = []
+        for ward, rooms in ROOM_NUMBERS.items():
+            all_rooms = all_rooms + rooms
+        if str(room) not in all_rooms:
             raise ValueError("Invalid room number")
         return room
+    
+    def set_room(self, room):
+        self.patient_room = self._validate_room(room)
+
+    def set_ward(self, ward):
+        self.patient_ward = self._validate_ward(ward)
 
     def update_room(self, room):
         self.patient_room = self._validate_room(room)
@@ -64,7 +73,10 @@ class Patient:
     def update_ward(self, ward):
         self.patient_ward = self._validate_ward(ward)
 
-    def commit_to_database(self, api_controller):
+    def get_id(self):
+        return self.patient_id
+    
+    def commit(self):
         patient_data = {
             "patient_name": self.patient_name,
             "patient_gender": self.patient_gender,
@@ -73,5 +85,4 @@ class Patient:
             "patient_ward": self.patient_ward,
             "patient_room": self.patient_room
         }
-
-        api_controller.commit_patient(patient_data)
+        
